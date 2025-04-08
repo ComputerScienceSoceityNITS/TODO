@@ -12,6 +12,8 @@ class CounterProvider extends ChangeNotifier {
 }
 
 class CounterScreen extends StatelessWidget {
+  const CounterScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

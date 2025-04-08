@@ -8,8 +8,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> _task = [];
-  TextEditingController _taskController = TextEditingController();
+  final List<Map<String, dynamic>> _task = [];
+  final TextEditingController _taskController = TextEditingController();
 
   void _addTask() {
     if (_taskController.text.isNotEmpty) {

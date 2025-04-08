@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CounterScreen extends StatefulWidget {
+  const CounterScreen({super.key});
+
   @override
   _CounterScreenState createState() => _CounterScreenState();
 }
@@ -32,7 +34,7 @@ class CounterDisplay extends StatelessWidget {
   final int counter;
   final VoidCallback onIncrement;
 
-  CounterDisplay({required this.counter, required this.onIncrement});
+  const CounterDisplay({super.key, required this.counter, required this.onIncrement});
 
   @override
   Widget build(BuildContext context) {
