@@ -19,32 +19,20 @@ class _CounterScreenState extends State<CounterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Counter Tst')),
+      appBar: AppBar(title: const Text('Counter Screen')),
       body: Center(
-        child: CounterDisplay(
-          counter: _counter,
-          onIncrement: _incrementCounter,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Counter: $_counter', style: const TextStyle(fontSize: 24)),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _incrementCounter,
+              child: const Text('Increment'),
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class CounterDisplay extends StatelessWidget {
-  final int counter;
-  final VoidCallback onIncrement;
-
-  const CounterDisplay({super.key, required this.counter, required this.onIncrement});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('Counsedvter: $counter', style: TextStyle(fontSize: 24),),
-        SizedBox(height: 10,),
-        ElevatedButton(onPressed: onIncrement, child: Text('Increment'))
-      ],
     );
   }
 }

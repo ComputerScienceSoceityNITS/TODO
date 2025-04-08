@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:test1/pages/home/home_page.dart';
 
@@ -10,52 +9,64 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  Future<void> init() async {
-    Future.delayed(Duration(seconds: 10), () {
-      if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) => const HomePage(),
-          ),
-        );
-      }
-    });
-  }
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    // init();
-    print("check");
-    Future.delayed(Duration(seconds: 1), () {
-      print("checking");
+
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
+
+    _controller.forward();
+
+    Timer(const Duration(seconds: 2), () {
       if (context.mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) => const HomePage(),
-          ),
+          MaterialPageRoute(builder: (_) => const HomePage()),
         );
       }
     });
   }
 
-  var logo = 'assets/images/nit_logo.png';
-  var Title = "Todo applicastion";
-  var textSize = 0.08;
-  var logoSize = 0.1;
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Timer(Duration(seconds: 5), ()=>Navigator.pushReplacement(
-    //       context,
-    //       MaterialPageRoute<void>(
-    //         builder: (BuildContext context) => const HomePage(),
-    //       ),
-    //     ));
-    print("buil");
-    return Scaffold(body: Center(child: Text("chjchbk")));
+    return Scaffold(
+      backgroundColor: const Color(0xFF0077B6), // Ocean Blue
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.task_alt_rounded, size: 100, color: Colors.white),
+              SizedBox(height: 20),
+              Text(
+                'Welcome',
+                style: TextStyle(
+                  fontSize: 30,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
