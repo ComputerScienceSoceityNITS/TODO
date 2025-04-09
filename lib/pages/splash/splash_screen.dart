@@ -9,9 +9,11 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -24,9 +26,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
 
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(_controller);
+
     _controller.forward();
 
-    Timer(const Duration(seconds: 2), () {
+    Timer(const Duration(seconds: 3), () {
       if (context.mounted) {
         Navigator.pushReplacement(
           context,
@@ -51,8 +55,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           opacity: _fadeAnimation,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.task_alt_rounded, size: 100, color: Colors.white),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Image.asset('assets/images/css-logo.png'),
+                ),
+              ),
               SizedBox(height: 20),
               Text(
                 'Welcome',
