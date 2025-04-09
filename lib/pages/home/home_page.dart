@@ -117,6 +117,7 @@ class _HomePageState extends State<HomePage> {
                     )
                     : Text('📭 No tasks!'),
           ),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
             child: Row(
@@ -144,6 +145,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+
           Expanded(
             child: AnimatedList(
               key: _listKey,
@@ -155,6 +157,86 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      bottomNavigationBar:
+          (_task.isNotEmpty
+              ? Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () async {
+                        bool toClear = false;
+                        await showDialog(
+                          context: context,
+                          builder:
+                              (context) => AlertDialog(
+                                title: Row(
+                                  children: [
+                                    Icon(Icons.warning, color: Colors.amber),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Are you sure you want to clear all tasks?',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: Color(0xFF0077B6),
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      toClear = true;
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      'Yes',
+                                      style: TextStyle(
+                                        color: Color(0xFF0077B6),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                        );
+                        if (toClear) {
+                          for (int i = _task.length - 1; i >= 0; i--) {
+                            _listKey.currentState?.removeItem(
+                              i,
+                              (context, animation) =>
+                                  _buildAnimatedItem(_task[i], i, animation),
+                              duration: const Duration(milliseconds: 1),
+                            );
+                          }
+                          Future.delayed(const Duration(milliseconds: 1), () {
+                            setState(() {
+                              _task.clear();
+                            });
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              duration: Duration(seconds: 2),
+                              content: Text('All tasks cleared!'),
+                            ),
+                          );
+                        }
+                      },
+                      child: Text('Clear All Tasks'),
+                    ),
+                  ],
+                ),
+              )
+              : SizedBox()),
     );
   }
 }
