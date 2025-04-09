@@ -18,14 +18,21 @@ class _HomePageState extends State<HomePage> {
     if (_taskController.text.isNotEmpty) {
       final newTask = {'task': _taskController.text, 'completed': false};
       _task.insert(0, newTask);
-      _listKey.currentState?.insertItem(0, duration: const Duration(milliseconds: 300));
+      _listKey.currentState?.insertItem(
+        0,
+        duration: const Duration(milliseconds: 300),
+      );
       _taskController.clear();
+      setState(() {});
     }
   }
 
   void _toggleTask(int index) {
     setState(() {
-      final counterProvider = Provider.of<CounterProvider>(context, listen: false);
+      final counterProvider = Provider.of<CounterProvider>(
+        context,
+        listen: false,
+      );
       bool isCompleted = _task[index]['completed'];
       _task[index]['completed'] = !isCompleted;
 
@@ -41,7 +48,7 @@ class _HomePageState extends State<HomePage> {
     final removedTask = _task[index];
     final wasCompleted = removedTask['completed'];
     _task.removeAt(index);
-
+    setState(() {});
     if (wasCompleted) {
       Provider.of<CounterProvider>(context, listen: false).decrement();
     }
@@ -53,7 +60,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildAnimatedItem(Map<String, dynamic> task, int index, Animation<double> animation) {
+  Widget _buildAnimatedItem(
+    Map<String, dynamic> task,
+    int index,
+    Animation<double> animation,
+  ) {
     return SizeTransition(
       sizeFactor: animation,
       child: Card(
@@ -95,10 +106,16 @@ class _HomePageState extends State<HomePage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              "🎯 Tasks Completed: ${context.watch<CounterProvider>().completedTasks}",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            child:
+                (_task.isNotEmpty)
+                    ? Text(
+                      "🎯 Tasks Completed: ${context.watch<CounterProvider>().completedTasks} out of ${_task.length}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                    : Text('📭 No tasks!'),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
