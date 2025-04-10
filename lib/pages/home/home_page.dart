@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test1/prov_counter.dart';
 
+import '../../theme/theme_provider.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -97,6 +99,16 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Todo Application"),
+        actions: [
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              return Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (value) => themeProvider.toggleTheme(value),
+              );
+            },
+          ),
+        ],
         // centerTitle: true,
         // backgroundColor: const Color(0xFF0077B6), // Ocean Blue
         // foregroundColor: Colors.white,
