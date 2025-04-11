@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test1/prov_counter.dart';
 
+import '../../theme/theme_provider.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -68,7 +70,7 @@ class _HomePageState extends State<HomePage> {
     return SizeTransition(
       sizeFactor: animation,
       child: Card(
-        color: Colors.white,
+        // color: Colors.white,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: ListTile(
           leading: Checkbox(
@@ -79,7 +81,8 @@ class _HomePageState extends State<HomePage> {
             task['task'],
             style: TextStyle(
               decoration: task['completed'] ? TextDecoration.lineThrough : null,
-              color: Colors.black,
+              decorationColor: Theme.of(context).textTheme.labelSmall!.color,
+              // color: Colors.black,
             ),
           ),
           trailing: IconButton(
@@ -96,12 +99,22 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Todo Application"),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF0077B6), // Ocean Blue
-        foregroundColor: Colors.white,
+        actions: [
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              return Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (value) => themeProvider.toggleTheme(value),
+              );
+            },
+          ),
+        ],
+        // centerTitle: true,
+        // backgroundColor: const Color(0xFF0077B6), // Ocean Blue
+        // foregroundColor: Colors.white,
       ),
-      backgroundColor: const Color(0xFFCAF0F8), // Light Ocean Blue
 
+      // backgroundColor: const Color(0xFFCAF0F8), // Light Ocean Blue
       body: Column(
         children: [
           Padding(
@@ -115,7 +128,13 @@ class _HomePageState extends State<HomePage> {
                         fontWeight: FontWeight.bold,
                       ),
                     )
-                    : Text('📭 No tasks!'),
+                    : Text(
+                      '📭 No tasks!',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
           ),
 
           Padding(
@@ -127,19 +146,19 @@ class _HomePageState extends State<HomePage> {
                     controller: _taskController,
                     decoration: const InputDecoration(
                       hintText: "Enter your task here...",
-                      border: OutlineInputBorder(),
-                      fillColor: Colors.white,
-                      filled: true,
+                      // border: OutlineInputBorder(),
+                      // fillColor: Colors.white,
+                      // filled: true,
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _addTask,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0077B6),
-                    foregroundColor: Colors.white,
-                  ),
+                  // style: ElevatedButton.styleFrom(
+                  //   backgroundColor: const Color(0xFF0077B6),
+                  //   foregroundColor: Colors.white,
+                  // ),
                   child: const Icon(Icons.add),
                 ),
               ],
