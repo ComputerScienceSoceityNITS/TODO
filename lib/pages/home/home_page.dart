@@ -1,5 +1,4 @@
-// Final HomePage with task editing + due date + persistent completion count
-
+// Final HomePage with no swipe-to-delete
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -20,7 +19,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<Map<String, dynamic>> _task = [];
-  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final TextEditingController _taskController = TextEditingController();
   DateTime? _selectedDueDate;
   int _reminderMinutesBefore = 10;
@@ -91,15 +89,14 @@ class _HomePageState extends State<HomePage> {
       final List decoded = jsonDecode(taskJson);
       _task.clear();
       int completedCount = 0;
-      for (var e in decoded.reversed) {
+      for (var e in decoded) {
         final taskMap = {
           'task': e['task'],
           'completed': e['completed'],
           'dueDate': e['dueDate'] != null ? DateTime.parse(e['dueDate']) : null,
         };
         if (taskMap['completed'] == true) completedCount++;
-        _task.insert(0, taskMap);
-        _listKey.currentState?.insertItem(0);
+        _task.add(taskMap);
       }
       setState(() {});
       Provider.of<CounterProvider>(
@@ -119,11 +116,7 @@ class _HomePageState extends State<HomePage> {
       if (_selectedDueDate != null) {
         _scheduleNotification(_taskController.text, _selectedDueDate!);
       }
-      _task.insert(0, newTask);
-      _listKey.currentState?.insertItem(
-        0,
-        duration: const Duration(milliseconds: 300),
-      );
+      _task.add(newTask);
       _taskController.clear();
       _selectedDueDate = null;
       setState(() {});
@@ -260,74 +253,69 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _deleteTask(int index) {
-    final removedTask = _task[index];
-    final wasCompleted = removedTask['completed'];
+    final wasCompleted = _task[index]['completed'];
     _task.removeAt(index);
     setState(() {});
     if (wasCompleted) {
       Provider.of<CounterProvider>(context, listen: false).decrement();
     }
-    _listKey.currentState?.removeItem(
-      index,
-      (context, animation) => _buildAnimatedItem(removedTask, index, animation),
-      duration: const Duration(milliseconds: 300),
-    );
     _saveTasksToPrefs();
   }
 
-  Widget _buildAnimatedItem(
-    Map<String, dynamic> task,
-    int index,
-    Animation<double> animation,
-  ) {
+  void _reorderTasks(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final task = _task.removeAt(oldIndex);
+      _task.insert(newIndex, task);
+      _saveTasksToPrefs();
+    });
+  }
+
+  Widget _buildTaskTile(Map<String, dynamic> task, int index) {
     final dueDate = task['dueDate'] as DateTime?;
     final isOverdue = dueDate != null && dueDate.isBefore(DateTime.now());
 
-    return SizeTransition(
-      sizeFactor: animation,
-      child: Card(
-        color: isOverdue ? Colors.red[100] : null,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: ListTile(
-          leading: Checkbox(
-            value: task['completed'],
-            onChanged: (_) => _toggleTask(index),
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return Card(
+      key: ValueKey(task),
+      color: isOverdue ? Colors.red[100] : null,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: ListTile(
+        leading: Checkbox(
+          value: task['completed'],
+          onChanged: (_) => _toggleTask(index),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              task['task'],
+              style: TextStyle(
+                decoration:
+                    task['completed'] ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            if (dueDate != null)
               Text(
-                task['task'],
+                'Due: ${DateFormat.yMd().add_jm().format(dueDate)}',
                 style: TextStyle(
-                  decoration:
-                      task['completed'] ? TextDecoration.lineThrough : null,
-                  decorationColor:
-                      Theme.of(context).textTheme.labelSmall!.color,
+                  fontSize: 12,
+                  color: isOverdue ? Colors.red : Colors.grey,
                 ),
               ),
-              if (dueDate != null)
-                Text(
-                  'Due: ${DateFormat.yMd().add_jm().format(dueDate)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isOverdue ? Colors.red : Colors.grey,
-                  ),
-                ),
-            ],
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blue),
-                onPressed: () => _editTask(index),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _deleteTask(index),
-              ),
-            ],
-          ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.blue),
+              onPressed: () => _editTask(index),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _deleteTask(index),
+            ),
+          ],
         ),
       ),
     );
@@ -342,7 +330,6 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.schedule),
-            tooltip: "Set default reminder time",
             onPressed: () async {
               final picked = await showDialog<int>(
                 context: context,
@@ -376,12 +363,11 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           Consumer<ThemeProvider>(
-            builder: (context, themeProvider, _) {
-              return Switch(
-                value: themeProvider.isDarkMode,
-                onChanged: (value) => themeProvider.toggleTheme(value),
-              );
-            },
+            builder:
+                (context, themeProvider, _) => Switch(
+                  value: themeProvider.isDarkMode,
+                  onChanged: (value) => themeProvider.toggleTheme(value),
+                ),
           ),
         ],
       ),
@@ -430,12 +416,11 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            child: AnimatedList(
-              key: _listKey,
-              initialItemCount: _task.length,
+            child: ReorderableListView.builder(
+              itemCount: _task.length,
+              onReorder: _reorderTasks,
               itemBuilder:
-                  (context, index, animation) =>
-                      _buildAnimatedItem(_task[index], index, animation),
+                  (context, index) => _buildTaskTile(_task[index], index),
             ),
           ),
         ],
@@ -454,18 +439,15 @@ class _HomePageState extends State<HomePage> {
                           context: context,
                           builder:
                               (context) => AlertDialog(
-                                title: Expanded(
-                                  child: Row(
-                                    children: const [
-                                      Icon(Icons.warning, color: Colors.amber),
-                                      SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          'Are you sure you want to clear all tasks?',
-                                        ),
+                                title: Row(
+                                  children: [
+                                    Icon(Icons.warning, color: Colors.amber),
+                                    Expanded(
+                                      child: const Text(
+                                        'Are you sure you want to delete all tasks?',
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                                 actions: [
                                   TextButton(
@@ -483,28 +465,12 @@ class _HomePageState extends State<HomePage> {
                               ),
                         );
                         if (toClear) {
-                          for (int i = _task.length - 1; i >= 0; i--) {
-                            _listKey.currentState?.removeItem(
-                              i,
-                              (context, animation) =>
-                                  _buildAnimatedItem(_task[i], i, animation),
-                              duration: const Duration(milliseconds: 1),
-                            );
-                          }
-                          Future.delayed(const Duration(milliseconds: 1), () {
-                            setState(() => _task.clear());
-                            Provider.of<CounterProvider>(
-                              context,
-                              listen: false,
-                            ).reset();
-                            _saveTasksToPrefs();
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              duration: Duration(seconds: 2),
-                              content: Text('All tasks cleared!'),
-                            ),
-                          );
+                          setState(() => _task.clear());
+                          Provider.of<CounterProvider>(
+                            context,
+                            listen: false,
+                          ).reset();
+                          _saveTasksToPrefs();
                         }
                       },
                       child: const Text('Clear All Tasks'),
