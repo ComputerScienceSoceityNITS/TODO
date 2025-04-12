@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:test1/prov_counter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/theme_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzData;
@@ -28,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _initNotifications();
+    _loadTasksFromPrefs();
   }
 
   Future<void> _initNotifications() async {
@@ -67,6 +70,41 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> _saveTasksToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final taskJson = jsonEncode(
+      _task
+          .map(
+            (e) => {
+              'task': e['task'],
+              'completed': e['completed'],
+              'dueDate': e['dueDate']?.toIso8601String(),
+            },
+          )
+          .toList(),
+    );
+    await prefs.setString('task_list', taskJson);
+  }
+
+  Future<void> _loadTasksFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final taskJson = prefs.getString('task_list');
+    if (taskJson != null) {
+      final List decoded = jsonDecode(taskJson);
+      _task.clear();
+      for (var e in decoded.reversed) {
+        final taskMap = {
+          'task': e['task'],
+          'completed': e['completed'],
+          'dueDate': e['dueDate'] != null ? DateTime.parse(e['dueDate']) : null,
+        };
+        _task.insert(0, taskMap);
+        _listKey.currentState?.insertItem(0);
+      }
+      setState(() {});
+    }
+  }
+
   void _addTask() {
     if (_taskController.text.isNotEmpty) {
       final newTask = {
@@ -87,6 +125,7 @@ class _HomePageState extends State<HomePage> {
       _taskController.clear();
       _selectedDueDate = null;
       setState(() {});
+      _saveTasksToPrefs();
     }
   }
 
@@ -133,6 +172,7 @@ class _HomePageState extends State<HomePage> {
       } else {
         counterProvider.decrement();
       }
+      _saveTasksToPrefs();
     });
   }
 
@@ -150,6 +190,8 @@ class _HomePageState extends State<HomePage> {
       (context, animation) => _buildAnimatedItem(removedTask, index, animation),
       duration: const Duration(milliseconds: 300),
     );
+
+    _saveTasksToPrefs();
   }
 
   Widget _buildAnimatedItem(
@@ -376,6 +418,7 @@ class _HomePageState extends State<HomePage> {
                             setState(() {
                               _task.clear();
                             });
+                            _saveTasksToPrefs();
                           });
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
